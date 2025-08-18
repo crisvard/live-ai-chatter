@@ -15,12 +15,18 @@ serve(async (req) => {
   try {
     const { text, agentConfig } = await req.json();
     
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    
+    console.log('Received request:', { text, agentConfig });
+    console.log('GEMINI_API_KEY available:', !!GEMINI_API_KEY);
+    
     if (!text) {
+      console.error('No text provided');
       throw new Error('Text is required');
     }
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not found in environment');
       throw new Error('GEMINI_API_KEY not configured');
     }
 
@@ -58,11 +64,20 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Gemini API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Gemini API response:', data);
+    
     const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Desculpe, não consegui processar sua mensagem.';
+    console.log('Extracted AI response:', aiResponse);
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
