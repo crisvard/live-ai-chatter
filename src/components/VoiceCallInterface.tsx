@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Importe o useEffect aqui
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,28 @@ const VoiceCallInterface = () => {
   } = useVoiceCall();
 
   const [showSettings, setShowSettings] = useState(false);
+
+  // --- CÓDIGO ADICIONADO PARA LISTAR AS VOZES NO CONSOLE ---
+  useEffect(() => {
+    const getVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        console.log("Vozes disponíveis no seu navegador:", voices);
+        const ptBrVoices = voices.filter(voice => voice.lang === 'pt-BR');
+        console.log("Vozes filtradas (PT-BR):", ptBrVoices);
+      } else {
+        console.log("Aguardando o carregamento das vozes...");
+      }
+    };
+
+    // A lista de vozes pode carregar de forma assíncrona
+    if ('onvoiceschanged' in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = getVoices;
+    } else {
+      getVoices();
+    }
+  }, []);
+  // ----------------------------------------------------------
 
   const handleStartCall = async () => {
     try {
